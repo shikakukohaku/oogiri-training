@@ -31,7 +31,10 @@ jobs:
 
       - run: npm ci
 
+      # Settings → Pages を手で開かなくても、ここで Pages を有効化する
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - run: npm run build
 
