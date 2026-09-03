@@ -96,6 +96,20 @@ LocalStorage のキー：
 上部の `JSON` / `CSV` ボタン、またはリザルト画面から書き出せる（現在進行中のセッションも含む）。
 「リセット」で今のお題をやり直せる。
 
+## GitHub Pages で公開する
+
+1. リポジトリの **Settings → Pages → Build and deployment → Source** を `GitHub Actions` にする
+   （これを先にやらないと、デプロイのジョブが「Pages が有効になっていない」で落ちる）
+2. あとは push するたびに `.github/workflows/deploy.yml` がビルドして公開する
+3. 公開先は `https://shikakukohaku.github.io/oogiri-training/`
+
+ワークフローは `main` と作業ブランチ `claude/oogiri-ideation-training-mvp-cy4uwr` の push で動く。
+`main` にマージしたら、ワークフローのブランチ指定からその行を消してよい。
+
+リポジトリ名のサブパスで配信されるため、ビルド時の `base` は `/oogiri-training/` にしてある
+（`vite.config.ts`）。`npm run dev` は今までどおり `/` で動く。
+ルート直下や別のホストに置くときは `BASE_PATH=/ npm run build` のように上書きする。
+
 ## 見た目について
 
 リソグラフの刷り物をイメージしている。生成りの紙、太い黒の輪郭、版ズレのようなオフセットの影、
