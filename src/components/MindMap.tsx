@@ -127,6 +127,8 @@ export function MindMap() {
           tone: tones.get(n.id) ?? '#1b1a17',
           connecting: connectMode,
           picked: connectFirstId === n.id,
+          kind: n.kind ?? 'word',
+          source: n.source ?? 'self',
         },
       })),
     [nodes, selectedIds, depthOf, tones, connectMode, connectFirstId],

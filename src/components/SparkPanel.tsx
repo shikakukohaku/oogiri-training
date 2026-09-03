@@ -28,19 +28,47 @@ export function SparkPanel() {
         <div className="spark-title">{card.title}</div>
         <div className="spark-subtitle">{card.subtitle}</div>
         <p className="spark-body">{card.body}</p>
+
+        {card.kind === 'aruaru' && card.items && card.items.length > 0 && (
+          <ul className="hint-list">
+            {card.items.map((item) => (
+              <li key={item}>
+                <span className="hint-text">{item}</span>
+                <button
+                  type="button"
+                  className="btn btn-small"
+                  title="入力欄に入れます。自分の言葉に直してから Enter"
+                  onClick={() =>
+                    emit(FOCUS_ADD, {
+                      nodeId: card.nodeIds[0],
+                      text: item,
+                      kind: 'aruaru',
+                      source: 'hint',
+                    })
+                  }
+                >
+                  使う
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <p className="spark-prompt">{card.prompt}</p>
-        <div className="spark-actions">
-          <button
-            type="button"
-            className="btn"
-            onClick={() => emit(FOCUS_ADD, { nodeId: card.nodeIds[0], text: card.seed })}
-          >
-            ノードにする
-          </button>
-          <button type="button" className="btn" onClick={() => emit(FOCUS_ANSWER, {})}>
-            回答にする
-          </button>
-        </div>
+        {card.kind !== 'aruaru' && (
+          <div className="spark-actions">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => emit(FOCUS_ADD, { nodeId: card.nodeIds[0], text: card.seed })}
+            >
+              ノードにする
+            </button>
+            <button type="button" className="btn" onClick={() => emit(FOCUS_ANSWER, {})}>
+              回答にする
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

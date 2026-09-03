@@ -6,6 +6,7 @@ import { exportLogsCsv, exportLogsJson } from '../lib/logs';
 
 const BARS = [
   { key: 'volume', label: '発想量', max: 20, tone: 'red' },
+  { key: 'aruaru', label: 'あるある', max: 8, tone: 'purple' },
   { key: 'width', label: '広さ', max: 8, tone: 'blue' },
   { key: 'depth', label: '深さ', max: 6, tone: 'teal' },
   { key: 'cross', label: '横断', max: 5, tone: 'pink' },

@@ -15,6 +15,7 @@
   --teal: #17a398;
   --blue: #3b62d9;
   --pink: #ff7eb0;
+  --violet: #7b5fd6;
 
   --tone: var(--red);
   --radius: 12px;
@@ -38,6 +39,9 @@
 }
 .tone-pink {
   --tone: var(--pink);
+}
+.tone-purple {
+  --tone: var(--violet);
 }
 
 * {
@@ -513,8 +517,12 @@ body::after {
 
 .hud {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.hud-cell:nth-child(2) .hud-label {
+  letter-spacing: -0.04em;
 }
 
 .hud-cell {
@@ -540,7 +548,7 @@ body::after {
 }
 
 .hud-value {
-  font-size: 23px;
+  font-size: 21px;
   font-weight: 900;
   line-height: 1.15;
   padding-top: 2px;
@@ -1325,6 +1333,165 @@ body::after {
 .topic-list p {
   margin: 0;
   font-size: 12px;
+}
+
+/* ---------- あるある ---------- */
+
+/* 単語は付箋、あるあるは一文。形から違うものとして扱う */
+.idea-node.is-aruaru .idea-card {
+  max-width: 260px;
+  padding: 9px 12px 10px;
+  border-radius: 4px 14px 4px 14px;
+  background: #efeaff;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.idea-node.is-aruaru .idea-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: var(--violet);
+  border-right: 2.5px solid var(--ink);
+  border-radius: 2px 0 0 2px;
+}
+
+.idea-mark {
+  position: absolute;
+  top: -11px;
+  left: 8px;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fffdf4;
+  background: var(--violet);
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  line-height: 1.5;
+  transform: rotate(-3deg);
+}
+
+/* お手本から取り込んだノードは点線にする */
+.idea-node.is-hint .idea-card {
+  border-style: dashed;
+}
+
+.idea-node.is-hint .idea-mark::after {
+  content: '・手本';
+}
+
+/* ---------- 単語 / あるある の切り替え ---------- */
+
+.kind-switch {
+  display: inline-flex;
+  border: 2.5px solid var(--ink);
+  border-radius: 9px;
+  overflow: hidden;
+  box-shadow: var(--pop);
+  flex: none;
+}
+
+.kind-btn {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 900;
+  padding: 6px 11px;
+  border: none;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.kind-btn + .kind-btn {
+  border-left: 2.5px solid var(--ink);
+}
+
+.kind-btn.is-on {
+  background: var(--ink);
+  color: var(--paper-2);
+}
+
+.kind-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.quickadd.mode-aruaru .kind-btn.is-on {
+  background: var(--violet);
+  color: #fffdf4;
+}
+
+.quickadd.mode-aruaru .quickadd-input:focus {
+  box-shadow: 3px 3px 0 var(--violet);
+}
+
+.quickadd-aruaru {
+  gap: 10px;
+}
+
+.btn-hint {
+  background: var(--violet);
+  color: #fffdf4;
+  flex: none;
+}
+
+.btn-hint:hover:not(:disabled) {
+  background: #8e75e0;
+}
+
+/* ---------- お手本カード ---------- */
+
+.panel-spark.kind-aruaru {
+  --tone: var(--violet);
+  border-color: var(--violet);
+  background: #f7f4ff;
+}
+
+.panel-spark.kind-aruaru .spark-title {
+  background: var(--violet);
+}
+
+.hint-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hint-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 4px 10px 4px 10px;
+}
+
+.hint-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.op-warn {
+  margin: -3px 0 9px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--ink);
+  background: #fff2d0;
+  border: 2px dashed var(--ink);
+  border-radius: 7px;
 }
 
 /* ---------- 線でつなぐモード ---------- */

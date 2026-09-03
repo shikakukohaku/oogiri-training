@@ -104,5 +104,6 @@ export function computeStats(
   for (const d of index.depthOf.values()) depth = Math.max(depth, d);
   const cross = edges.filter((e) => isCrossBranch(index, e)).length;
   const shifts = new Set(operators.map((o) => o.operator)).size;
-  return { volume, width, depth, cross, shifts };
+  const aruaru = nodes.filter((n) => n.kind === 'aruaru').length;
+  return { volume, width, depth, cross, shifts, aruaru };
 }
