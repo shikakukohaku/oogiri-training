@@ -27,6 +27,11 @@ export const PRESET_TOPICS: Topic[] = [
     text: 'この学校、校長がYouTuberだな。なぜ分かった？',
     root: '校長がYouTuberの学校',
   },
+  {
+    id: 'granny',
+    text: '逆張りおばあちゃんが教えてくれた生活の知恵とは？',
+    root: '逆張りおばあちゃんの生活の知恵',
+  },
 ];
 
 export function isPresetTopic(id: string): boolean {
