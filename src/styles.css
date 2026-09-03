@@ -1203,6 +1203,118 @@ body::after {
   margin-top: 9px;
 }
 
+/* ---------- お題を作る ---------- */
+
+.btn-add-topic {
+  background: var(--teal);
+  color: #fffdf4;
+}
+
+.btn-add-topic:hover:not(:disabled) {
+  background: #1fb9ac;
+}
+
+.btn-add-topic.is-open {
+  background: var(--ink);
+  color: var(--paper-2);
+}
+
+.topic-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.topic-editor {
+  --tone: var(--teal);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 14px;
+  z-index: 21;
+  width: min(400px, calc(100vw - 28px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 15px 15px;
+  background: var(--paper-2);
+  border: 3px solid var(--ink);
+  border-radius: 14px 5px 14px 5px;
+  box-shadow: 6px 7px 0 var(--teal);
+}
+
+.topic-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.topic-field > span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.topic-field input {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 7px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 9px;
+  background: var(--paper-2);
+  color: var(--ink);
+  box-shadow: var(--pop);
+}
+
+.topic-field input:focus {
+  outline: none;
+  background: #fff;
+  box-shadow: 3px 3px 0 var(--teal);
+}
+
+.topic-list h3 {
+  margin: 0 0 5px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.topic-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.topic-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 9px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 8px 3px 8px 3px;
+}
+
+.topic-list-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.topic-list p {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* ---------- キャンバス周り ---------- */
 
 .flow-wrap {
@@ -1300,6 +1412,12 @@ body::after {
 
   .topic-select {
     max-width: 150px;
+  }
+
+  .topic-editor {
+    right: 8px;
+    left: 8px;
+    width: auto;
   }
 
   .side-actions {

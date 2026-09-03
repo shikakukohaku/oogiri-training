@@ -1,6 +1,7 @@
 import type { Topic } from '../types';
 
-export const TOPICS: Topic[] = [
+/** 最初から入っているお題 */
+export const PRESET_TOPICS: Topic[] = [
   {
     id: 'alarm',
     text: '絶対に売れない目覚まし時計の特徴とは？',
@@ -28,11 +29,21 @@ export const TOPICS: Topic[] = [
   },
 ];
 
-export function topicById(id: string): Topic {
-  return TOPICS.find((t) => t.id === id) ?? TOPICS[0];
+export function isPresetTopic(id: string): boolean {
+  return PRESET_TOPICS.some((t) => t.id === id);
 }
 
-export function nextTopicId(id: string): string {
-  const i = TOPICS.findIndex((t) => t.id === id);
-  return TOPICS[(i + 1 + TOPICS.length) % TOPICS.length].id;
+/**
+ * お題の文からマップ中央に置く短い言葉を作る。
+ * 完璧には決められないので、入力欄の初期値として出して直してもらう。
+ */
+export function deriveRoot(text: string): string {
+  const trimmed = text.trim();
+  const head = trimmed.split(/[。．]/)[0] ?? trimmed;
+  const base = head.length >= 4 ? head : trimmed;
+  const cleaned = base
+    .replace(/[？?！!。．\s]+$/g, '')
+    .replace(/(とは|なのか|だろうか)$/, '')
+    .trim();
+  return (cleaned || trimmed).slice(0, 24);
 }

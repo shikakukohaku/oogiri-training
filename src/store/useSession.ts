@@ -11,7 +11,8 @@ import type {
   SparkCard,
   Topic,
 } from '../types';
-import { nextTopicId, topicById, TOPICS } from '../data/topics';
+import { PRESET_TOPICS } from '../data/topics';
+import { nextTopicId, topicById } from './useTopics';
 import { operatorDef } from '../data/operators';
 import { pickRandomWord } from '../data/randomWords';
 import { uid } from '../lib/uid';
@@ -146,7 +147,7 @@ function sameIds(a: string[], b: string[]): boolean {
 export const useSession = create<SessionState>()(
   persist(
     (set, get) => ({
-      ...freshSession(TOPICS[0].id),
+      ...freshSession(PRESET_TOPICS[0].id),
 
       addNode: (parentId, rawText, category) => {
         const text = rawText.trim().slice(0, MAX_TEXT);

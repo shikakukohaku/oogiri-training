@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { useSession } from '../store/useSession';
-import { topicById, TOPICS } from '../data/topics';
+import { PRESET_TOPICS } from '../data/topics';
+import { topicById, useTopics } from '../store/useTopics';
 import { exportLogsCsv, exportLogsJson } from '../lib/logs';
 import { emit, FIT_VIEW } from '../lib/bus';
+import { TopicEditor } from './TopicEditor';
 
 export function TopBar() {
+  const [editing, setEditing] = useState(false);
+  const customTopics = useTopics((s) => s.custom);
   const topicId = useSession((s) => s.topicId);
   const setTopic = useSession((s) => s.setTopic);
   const goNextTopic = useSession((s) => s.goNextTopic);
@@ -38,12 +43,32 @@ export function TopBar() {
             }
           }}
         >
-          {TOPICS.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.text}
-            </option>
-          ))}
+          <optgroup label="プリセット">
+            {PRESET_TOPICS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.text}
+              </option>
+            ))}
+          </optgroup>
+          {customTopics.length > 0 && (
+            <optgroup label="作ったお題">
+              {customTopics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.text}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
+        <button
+          type="button"
+          className={`btn btn-add-topic${editing ? ' is-open' : ''}`}
+          title="自分でお題を作る"
+          aria-expanded={editing}
+          onClick={() => setEditing((v) => !v)}
+        >
+          ＋お題
+        </button>
         <button type="button" className="btn" disabled={!canUndo} onClick={undo} title="Ctrl+Z">
           元に戻す
         </button>
@@ -94,6 +119,12 @@ export function TopBar() {
           </button>
         </span>
       </div>
+      {editing && (
+        <>
+          <div className="topic-editor-backdrop" onClick={() => setEditing(false)} />
+          <TopicEditor onClose={() => setEditing(false)} />
+        </>
+      )}
     </header>
   );
 }

@@ -1,7 +1,7 @@
 import { useSession } from '../store/useSession';
 import { useStats } from '../lib/useStats';
 import { operatorLabel } from '../data/operators';
-import { topicById } from '../data/topics';
+import { topicById } from '../store/useTopics';
 import { exportLogsCsv, exportLogsJson } from '../lib/logs';
 
 const BARS = [
