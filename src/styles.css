@@ -1444,6 +1444,25 @@ body::after {
   background: #8e75e0;
 }
 
+/* 押せないのではなく、押すと理由が返る状態 */
+.btn-hint.is-locked {
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  border-style: dashed;
+}
+
+.btn-hint.is-locked:hover:not(:disabled) {
+  background: #fff;
+  color: var(--ink);
+}
+
+/* 理由はボタンのすぐ隣に置く。右端に飛ばすと読まれない */
+.quickadd-note {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
 /* ---------- お手本カード ---------- */
 
 .panel-spark.kind-aruaru {
