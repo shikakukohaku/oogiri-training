@@ -18,6 +18,7 @@ import { nextTopicId, topicById } from './useTopics';
 import { operatorDef } from '../data/operators';
 import { pickRandomWord } from '../data/randomWords';
 import { lookupAruaru } from '../data/aruaru';
+import { fetchAruaruHint, getHintEndpoint } from '../lib/hintClient';
 import { uid } from '../lib/uid';
 import { buildIndex, computeStats, subtreeIds } from '../lib/tree';
 import { childPosition, radialLayout } from '../lib/layout';
@@ -62,6 +63,8 @@ interface SessionState extends Doc {
   ) => string | null;
   /** 選んだ言葉のお手本（あるある）を開く。まだ開けないときは 'locked' を返す */
   openAruaruHint: (nodeId: string) => 'ok' | 'locked' | 'none';
+  /** 進行中のお手本取得を見分けるための番号 */
+  hintRequestId: number;
   renameNode: (id: string, text: string) => void;
   setNodeCategory: (id: string, category: Category) => void;
   moveNode: (id: string, position: { x: number; y: number }) => void;
@@ -110,6 +113,7 @@ function makeLog(topic: Topic): SessionLog {
     hintOpenCount: 0,
     hintNodeCount: 0,
     hintMissWords: [],
+    aiHintCount: 0,
   };
 }
 
@@ -157,6 +161,7 @@ function freshSession(topicId: string) {
     selectedIds: [] as string[],
     connectMode: false,
     connectFirstId: null as string | null,
+    hintRequestId: 0,
     card: null,
     lastWord: null,
     phase: 'map' as Phase,
@@ -196,13 +201,14 @@ export const useSession = create<SessionState>()(
           target: node.id,
           type: 'parent',
         };
+        // 選択は動かさない。追加先は「選んでいるノード」で決まるので、
+        // ここで新しいノードを選ぶと、続けて兄弟を並べられなくなる
         set({
           ...commit(s, {
             ...snapshot(s),
             nodes: [...s.nodes, node],
             edges: [...s.edges, edge],
           }),
-          selectedIds: [node.id],
           log: {
             ...s.log,
             createdNodeCount: s.log.createdNodeCount + 1,
@@ -394,30 +400,110 @@ export const useSession = create<SessionState>()(
         // 入力欄を覆ってしまい、「書いてください」と言われても書けない
         if (written < 1) return 'locked';
 
-        const hit = lookupAruaru(node.text);
+        const topic = topicById(s.topicId);
+        const existing = s.nodes
+          .filter((n) => n.parentId === nodeId && n.kind === 'aruaru')
+          .map((n) => n.text);
+        const endpoint = getHintEndpoint();
+
+        // 手元の辞書は、単語そのものにしか答えられない。同じ「おばあちゃん」でも
+        // お題が変われば要るあるあるは変わるので、AI があるならそちらを使う。
+        const presetHit = lookupAruaru(node.text);
+        const presetCard = (): SparkCard => ({
+          kind: 'aruaru',
+          title: 'お手本',
+          subtitle:
+            presetHit && presetHit.word !== node.text
+              ? `${node.text} → ${presetHit.word}`
+              : node.text,
+          body: presetHit
+            ? '多くの人が共有している前提。ここを裏切ると笑いになる。'
+            : `「${node.text}」のお手本はまだ用意していません。自分で書いてみてください。`,
+          prompt: presetHit
+            ? '自分の言葉に直してから取り込んでください'
+            : '「〜しがち」「〜あるよね」で終わる形にすると書きやすい',
+          nodeIds: [node.id],
+          seed: '',
+          items: presetHit?.items ?? [],
+          source: 'preset',
+          at: Date.now(),
+        });
+
+        if (!endpoint) {
+          set({
+            card: presetCard(),
+            log: {
+              ...s.log,
+              hintOpenCount: s.log.hintOpenCount + 1,
+              hintMissWords: presetHit
+                ? s.log.hintMissWords
+                : [...s.log.hintMissWords, node.text],
+            },
+          });
+          return 'ok';
+        }
+
+        const requestId = s.hintRequestId + 1;
         set({
+          hintRequestId: requestId,
           card: {
             kind: 'aruaru',
             title: 'お手本',
-            // 引けた見出し語が入力とずれることがあるので、そのまま出す
-            subtitle: hit && hit.word !== node.text ? `${node.text} → ${hit.word}` : node.text,
-            body: hit
-              ? '多くの人が共有している前提。ここを裏切ると笑いになる。'
-              : `「${node.text}」のお手本はまだ用意していません。自分で書いてみてください。`,
-            prompt: hit
-              ? '自分の言葉に直してから取り込んでください'
-              : '「〜しがち」「〜あるよね」で終わる形にすると書きやすい',
+            subtitle: node.text,
+            body: `「${topic.text}」の文脈で、「${node.text}」のあるあるを考えています…`,
+            prompt: '',
             nodeIds: [node.id],
             seed: '',
-            items: hit?.items ?? [],
+            items: [],
+            loading: true,
+            source: 'ai',
             at: Date.now(),
           },
-          log: {
-            ...s.log,
-            hintOpenCount: s.log.hintOpenCount + 1,
-            hintMissWords: hit ? s.log.hintMissWords : [...s.log.hintMissWords, node.text],
-          },
+          log: { ...s.log, hintOpenCount: s.log.hintOpenCount + 1 },
         });
+
+        void fetchAruaruHint(endpoint, { word: node.text, topic: topic.text, existing })
+          .then((items) => {
+            // 押し直されていたら古い結果は捨てる
+            if (get().hintRequestId !== requestId) return;
+            set((prev) => ({
+              card: {
+                kind: 'aruaru',
+                title: 'お手本',
+                subtitle: node.text,
+                body: 'このお題の文脈での、共有された前提。ここを裏切ると笑いになる。',
+                prompt: '自分の言葉に直してから取り込んでください',
+                nodeIds: [node.id],
+                seed: '',
+                items,
+                source: 'ai',
+                at: Date.now(),
+              },
+              log: { ...prev.log, aiHintCount: prev.log.aiHintCount + 1 },
+            }));
+          })
+          .catch((e: unknown) => {
+            if (get().hintRequestId !== requestId) return;
+            const reason = e instanceof Error ? e.message : 'お手本の取得に失敗しました';
+            // 落ちたときは手元の辞書に戻す。お題には合っていないかもしれないと断る
+            set((prev) => ({
+              card: {
+                ...presetCard(),
+                error: reason,
+                body: presetHit
+                  ? `${reason}。手元の見本を出しています（お題に合っていないかもしれません）。`
+                  : `${reason}。自分で書いてみてください。`,
+                at: Date.now(),
+              },
+              log: {
+                ...prev.log,
+                hintMissWords: presetHit
+                  ? prev.log.hintMissWords
+                  : [...prev.log.hintMissWords, node.text],
+              },
+            }));
+          });
+
         return 'ok';
       },
 

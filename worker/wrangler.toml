@@ -1,0 +1,15 @@
+name = "oogiri-aruaru"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+# 許可するオリジン。空にすると誰からでも叩けるので、必ず入れる
+ALLOWED_ORIGINS = "https://shikakukohaku.github.io"
+# 1つの IP が1日に押せる回数（KV を割り当てたときだけ効く）
+DAILY_LIMIT = "40"
+
+# 回数制限を使う場合は KV を作って id を入れる
+# wrangler kv namespace create RATE_LIMIT
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "..."
