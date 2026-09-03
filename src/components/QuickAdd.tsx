@@ -16,6 +16,7 @@ export function QuickAdd() {
   const [pinned, setPinned] = useState<string | null>(null);
   // お手本から流し込まれた文か。書き直しても由来は由来として残す
   const [fromHint, setFromHint] = useState(false);
+  const [notice, setNotice] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const lastCreated = useRef<string | null>(null);
 
@@ -73,6 +74,7 @@ export function QuickAdd() {
     if (!id) return;
     setText('');
     setFromHint(false);
+    setNotice('');
     lastCreated.current = id;
     // あるあるは同じ言葉に並べたいので、掘らずに追加先を保つ
     setPinned(mode === 'aruaru' ? targetId : dive ? id : targetId);
@@ -143,6 +145,8 @@ export function QuickAdd() {
         </button>
       </div>
 
+      {mode === 'aruaru' && notice && <p className="quickadd-notice">{notice}</p>}
+
       {mode === 'aruaru' ? (
         <div className="quickadd-row quickadd-aruaru">
           <button
@@ -156,7 +160,12 @@ export function QuickAdd() {
             }
             onClick={() => {
               if (!targetId) return;
-              openAruaruHint(targetId);
+              const result = openAruaruHint(targetId);
+              setNotice(
+                result === 'locked'
+                  ? `「${target?.text ?? ''}」のあるあるを、まず自分で1つ書いてみてください。先に見本を見ると、自分で考える回路を通らずに終わってしまいます。`
+                  : '',
+              );
               inputRef.current?.focus();
             }}
           >

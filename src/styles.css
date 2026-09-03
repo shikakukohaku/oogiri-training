@@ -1456,6 +1456,18 @@ body::after {
   color: var(--ink);
 }
 
+/* 押した理由は入力欄の真下に出す。どの画面幅でも読める場所 */
+.quickadd-notice {
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  background: #fff2d0;
+  border: 2px dashed var(--ink);
+  border-radius: 8px;
+}
+
 /* 理由はボタンのすぐ隣に置く。右端に飛ばすと読まれない */
 .quickadd-note {
   font-size: 11.5px;

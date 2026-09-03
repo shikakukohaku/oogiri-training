@@ -230,12 +230,27 @@ export const ARUARU_PRESETS: Record<string, string[]> = {
   ],
 };
 
-/** 揺れを吸収してから引く */
-export function lookupAruaru(word: string): string[] | null {
-  const key = word.trim();
-  return ARUARU_PRESETS[key] ?? null;
+export interface AruaruHit {
+  /** 実際に引けた見出し語。入力とずれることがあるので表示に使う */
+  word: string;
+  items: string[];
 }
 
-export function hasAruaru(word: string): boolean {
-  return lookupAruaru(word) !== null;
+/**
+ * 見出し語そのままで引けなければ、その言葉に含まれる見出し語で引く。
+ * お題ノードは「絶対に売れない目覚まし時計」のような長い言い回しなので、
+ * 完全一致だけだとほぼ空振りする。長いものを優先して当てる。
+ */
+export function lookupAruaru(word: string): AruaruHit | null {
+  const key = word.trim();
+  if (!key) return null;
+
+  const exact = ARUARU_PRESETS[key];
+  if (exact) return { word: key, items: exact };
+
+  const contained = Object.keys(ARUARU_PRESETS)
+    .filter((head) => head.length >= 2 && key.includes(head))
+    .sort((a, b) => b.length - a.length)[0];
+
+  return contained ? { word: contained, items: ARUARU_PRESETS[contained] } : null;
 }

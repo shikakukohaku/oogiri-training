@@ -60,8 +60,8 @@ interface SessionState extends Doc {
     kind?: NodeKind,
     source?: NodeSource,
   ) => string | null;
-  /** 選んだ言葉のお手本（あるある）を開く */
-  openAruaruHint: (nodeId: string) => void;
+  /** 選んだ言葉のお手本（あるある）を開く。まだ開けないときは 'locked' を返す */
+  openAruaruHint: (nodeId: string) => 'ok' | 'locked' | 'none';
   renameNode: (id: string, text: string) => void;
   setNodeCategory: (id: string, category: Category) => void;
   moveNode: (id: string, position: { x: number; y: number }) => void;
@@ -384,52 +384,41 @@ export const useSession = create<SessionState>()(
       openAruaruHint: (nodeId) => {
         const s = get();
         const node = s.nodes.find((n) => n.id === nodeId);
-        if (!node) return;
+        if (!node) return 'none';
 
         // 自分で1つ書く前は開かない。ただし黙って何もしないのではなく、理由を返す
         const written = s.nodes.filter(
           (n) => n.parentId === nodeId && n.kind === 'aruaru' && n.source !== 'hint',
         ).length;
-        if (written < 1) {
-          set({
-            card: {
-              kind: 'aruaru',
-              title: 'お手本の前に',
-              subtitle: node.text,
-              body: `「${node.text}」のあるあるを、まず自分で1つ書いてみてください。先に見本を見ると、自分で考える回路を通らずに終わってしまいます。`,
-              prompt: '1つ書けばお手本が開きます',
-              nodeIds: [node.id],
-              seed: '',
-              items: [],
-              at: Date.now(),
-            },
-          });
-          return;
-        }
+        // 案内はカードではなく入力欄のそばに出す。スマホではシートが
+        // 入力欄を覆ってしまい、「書いてください」と言われても書けない
+        if (written < 1) return 'locked';
 
-        const items = lookupAruaru(node.text);
+        const hit = lookupAruaru(node.text);
         set({
           card: {
             kind: 'aruaru',
             title: 'お手本',
-            subtitle: node.text,
-            body: items
+            // 引けた見出し語が入力とずれることがあるので、そのまま出す
+            subtitle: hit && hit.word !== node.text ? `${node.text} → ${hit.word}` : node.text,
+            body: hit
               ? '多くの人が共有している前提。ここを裏切ると笑いになる。'
-              : 'この言葉のお手本はまだ用意していません。自分で書いてみてください。',
-            prompt: items
+              : `「${node.text}」のお手本はまだ用意していません。自分で書いてみてください。`,
+            prompt: hit
               ? '自分の言葉に直してから取り込んでください'
               : '「〜しがち」「〜あるよね」で終わる形にすると書きやすい',
             nodeIds: [node.id],
             seed: '',
-            items: items ?? [],
+            items: hit?.items ?? [],
             at: Date.now(),
           },
           log: {
             ...s.log,
             hintOpenCount: s.log.hintOpenCount + 1,
-            hintMissWords: items ? s.log.hintMissWords : [...s.log.hintMissWords, node.text],
+            hintMissWords: hit ? s.log.hintMissWords : [...s.log.hintMissWords, node.text],
           },
         });
+        return 'ok';
       },
 
       clearCard: () => set({ card: null }),
