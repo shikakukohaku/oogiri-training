@@ -1,13 +1,21 @@
+import { useEffect, useRef } from 'react';
 import { useSession } from '../store/useSession';
 import { emit, FOCUS_ADD, FOCUS_ANSWER } from '../lib/bus';
 
 export function SparkPanel() {
   const card = useSession((s) => s.card);
   const clearCard = useSession((s) => s.clearCard);
+  const ref = useRef<HTMLElement>(null);
+  const cardAt = card?.at;
+
+  // 新しいカードが出たとき、画面の外にいたら寄せる
+  useEffect(() => {
+    if (cardAt) ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [cardAt]);
 
   if (!card) {
     return (
-      <section className="panel panel-spark is-empty">
+      <section className="panel panel-spark is-empty" ref={ref}>
         <h2 className="panel-title">ひらめきカード</h2>
         <p className="muted">
           ずらしを押すか、離れた2つのノードを線で繋ぐと、ここにお題が出ます。
@@ -17,7 +25,7 @@ export function SparkPanel() {
   }
 
   return (
-    <section className={`panel panel-spark kind-${card.kind}`}>
+    <section className={`panel panel-spark kind-${card.kind}`} ref={ref}>
       <h2 className="panel-title">
         ひらめきカード
         <button type="button" className="panel-x" onClick={clearCard} title="閉じる">

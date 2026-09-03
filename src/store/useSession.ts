@@ -385,6 +385,28 @@ export const useSession = create<SessionState>()(
         const s = get();
         const node = s.nodes.find((n) => n.id === nodeId);
         if (!node) return;
+
+        // 自分で1つ書く前は開かない。ただし黙って何もしないのではなく、理由を返す
+        const written = s.nodes.filter(
+          (n) => n.parentId === nodeId && n.kind === 'aruaru' && n.source !== 'hint',
+        ).length;
+        if (written < 1) {
+          set({
+            card: {
+              kind: 'aruaru',
+              title: 'お手本の前に',
+              subtitle: node.text,
+              body: `「${node.text}」のあるあるを、まず自分で1つ書いてみてください。先に見本を見ると、自分で考える回路を通らずに終わってしまいます。`,
+              prompt: '1つ書けばお手本が開きます',
+              nodeIds: [node.id],
+              seed: '',
+              items: [],
+              at: Date.now(),
+            },
+          });
+          return;
+        }
+
         const items = lookupAruaru(node.text);
         set({
           card: {

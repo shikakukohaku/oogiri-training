@@ -147,20 +147,24 @@ export function QuickAdd() {
         <div className="quickadd-row quickadd-aruaru">
           <button
             type="button"
-            className="btn btn-hint"
-            disabled={!targetId || selfAruaruCount < 1}
+            className={`btn btn-hint${selfAruaruCount < 1 ? ' is-locked' : ''}`}
+            disabled={!targetId}
             title={
               selfAruaruCount < 1
-                ? 'まず自分で1つ書いてから。先に見本を見ると考える回路を通らずに終わります'
-                : 'お手本を見る'
+                ? 'まず自分で1つ書いてから開きます'
+                : 'あるあるのお手本を5つ見る'
             }
-            onClick={() => targetId && openAruaruHint(targetId)}
+            onClick={() => {
+              if (!targetId) return;
+              openAruaruHint(targetId);
+              inputRef.current?.focus();
+            }}
           >
-            お手本を見る
+            {selfAruaruCount < 1 ? '🔒 お手本を見る' : 'お手本を見る'}
           </button>
-          <span className="quickadd-hint">
+          <span className="quickadd-note">
             {selfAruaruCount < 1
-              ? 'まず自分で1つ書こう。書いてからお手本を見ると身につき方が変わります'
+              ? 'まず自分で1つ書こう。書いてから見ると身につき方が変わります'
               : '多くの人が共有している前提を一文で。「〜しがち」で終わる形が書きやすい'}
           </span>
         </div>
