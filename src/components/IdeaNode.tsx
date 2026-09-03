@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
-import type { Category } from '../types';
+import type { Category, NodeKind, NodeSource } from '../types';
 import { categoryDef } from '../data/categories';
 import { useSession } from '../store/useSession';
 import { emit, FOCUS_ADD } from '../lib/bus';
@@ -18,6 +18,8 @@ export type IdeaNodeData = {
   connecting: boolean;
   /** つなぐ1つ目として選ばれているか */
   picked: boolean;
+  kind: NodeKind;
+  source: NodeSource;
 };
 
 export type IdeaFlowNode = Node<IdeaNodeData, 'idea'>;
@@ -67,7 +69,9 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
         (data.isRoot ? ' is-root' : '') +
         (selected ? ' is-selected' : '') +
         (data.connecting ? ' is-connecting' : '') +
-        (data.picked ? ' is-picked' : '')
+        (data.picked ? ' is-picked' : '') +
+        (data.kind === 'aruaru' ? ' is-aruaru' : '') +
+        (data.source === 'hint' ? ' is-hint' : '')
       }
       onDoubleClick={() => {
         setDraft(data.text);
@@ -104,7 +108,7 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
         style={
           {
             transform: `rotate(${tilt}deg)`,
-            background: data.isRoot ? undefined : cat.color,
+            background: data.isRoot || data.kind === 'aruaru' ? undefined : cat.color,
             '--tone': data.tone,
           } as CSSProperties
         }
@@ -132,7 +136,9 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
           <span className="idea-text">{data.text}</span>
         )}
 
-        {!data.isRoot && data.category !== 'other' && (
+        {data.kind === 'aruaru' && <span className="idea-mark">あるある</span>}
+
+        {!data.isRoot && data.kind !== 'aruaru' && data.category !== 'other' && (
           <span className="idea-cat" style={{ background: cat.deep }}>
             {cat.label}
           </span>

@@ -10,6 +10,9 @@ export function OperatorPanel() {
     .map((id) => nodes.find((n) => n.id === id))
     .filter((n): n is NonNullable<typeof n> => Boolean(n));
 
+  // 単語は裏切る前提を持たないので、ずらしても手応えが出にくい
+  const onlyWords = picked.length > 0 && picked.every((n) => n.kind !== 'aruaru');
+
   return (
     <section className="panel panel-op">
       <h2 className="panel-title">ずらし</h2>
@@ -26,6 +29,7 @@ export function OperatorPanel() {
           </>
         )}
       </p>
+      {onlyWords && <p className="op-warn">単語のままだとずらしにくい。先にあるあるを出そう</p>}
       <div className="op-grid">
         {OPERATORS.map((op) => {
           const disabled = picked.length < op.needs;

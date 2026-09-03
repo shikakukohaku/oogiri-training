@@ -24,12 +24,23 @@ export interface Topic {
   root: string;
 }
 
+/**
+ * word   … 連想で出した言葉。単体では「ずらし」にくい
+ * aruaru … 多くの人が共有している前提を一文にしたもの。ずらしの対象はこちら
+ */
+export type NodeKind = 'word' | 'aruaru';
+
+/** self … 自分で書いた / hint … お手本から取り込んだ */
+export type NodeSource = 'self' | 'hint';
+
 export interface IdeaNode {
   id: string;
   text: string;
   parentId: string | null;
   category: Category;
   position: { x: number; y: number };
+  kind?: NodeKind;
+  source?: NodeSource;
 }
 
 export type EdgeKind = 'parent' | 'cross';
@@ -77,7 +88,7 @@ export interface Answer {
 
 /** 右パネルに出る「ひらめきカード」 */
 export interface SparkCard {
-  kind: 'operator' | 'random' | 'combine';
+  kind: 'operator' | 'random' | 'combine' | 'aruaru';
   title: string;
   subtitle: string;
   body: string;
@@ -85,6 +96,8 @@ export interface SparkCard {
   nodeIds: string[];
   /** 「ノードにする」で初期値として入れる文字列 */
   seed: string;
+  /** kind === 'aruaru' のときのお手本一覧 */
+  items?: string[];
   at: number;
 }
 
@@ -105,6 +118,15 @@ export interface SessionLog {
   randomWordCount: number;
   answerCount: number;
   finalAnswer: string | null;
+  /** あるあるノードの数（自分で書いたもの + お手本から取り込んだもの） */
+  aruaruCount: number;
+  aruaruSelfCount: number;
+  /** お手本を開いた回数 */
+  hintOpenCount: number;
+  /** お手本から取り込んだノード数 */
+  hintNodeCount: number;
+  /** お手本を求められたが用意が無かった言葉。本物のAI化を判断する材料 */
+  hintMissWords: string[];
 }
 
 export interface Stats {
@@ -118,4 +140,6 @@ export interface Stats {
   cross: number;
   /** ずらし: 使用した演算子の種類数 */
   shifts: number;
+  /** あるある: あるあるノードの数 */
+  aruaru: number;
 }

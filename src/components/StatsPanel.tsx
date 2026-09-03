@@ -2,6 +2,7 @@ import { useStats } from '../lib/useStats';
 
 const ROWS = [
   { key: 'volume', label: '発想量', note: '総ノード数', max: 20, tone: 'red' },
+  { key: 'aruaru', label: 'あるある', note: '共有された前提', max: 8, tone: 'purple' },
   { key: 'width', label: '広さ', note: 'お題の直下', max: 8, tone: 'blue' },
   { key: 'depth', label: '深さ', note: '最大の段数', max: 6, tone: 'teal' },
   { key: 'cross', label: '横断', note: '枝をまたぐ線', max: 5, tone: 'pink' },

@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type {
   Answer,
   Category,
+  NodeKind,
+  NodeSource,
   IdeaEdge,
   IdeaNode,
   OperatorId,
@@ -15,6 +17,7 @@ import { PRESET_TOPICS } from '../data/topics';
 import { nextTopicId, topicById } from './useTopics';
 import { operatorDef } from '../data/operators';
 import { pickRandomWord } from '../data/randomWords';
+import { lookupAruaru } from '../data/aruaru';
 import { uid } from '../lib/uid';
 import { buildIndex, computeStats, subtreeIds } from '../lib/tree';
 import { childPosition, radialLayout } from '../lib/layout';
@@ -22,6 +25,8 @@ import { achievedMissions } from '../lib/missions';
 import { appendLog } from '../lib/logs';
 
 export const MAX_ANSWERS = 5;
+/** あるあるは一文なので、単語より長く許す */
+export const MAX_ARUARU_TEXT = 40;
 const MAX_HISTORY = 60;
 const MAX_TEXT = 60;
 
@@ -48,7 +53,15 @@ interface SessionState extends Doc {
   past: Doc[];
   future: Doc[];
 
-  addNode: (parentId: string, text: string, category: Category) => string | null;
+  addNode: (
+    parentId: string,
+    text: string,
+    category: Category,
+    kind?: NodeKind,
+    source?: NodeSource,
+  ) => string | null;
+  /** 選んだ言葉のお手本（あるある）を開く */
+  openAruaruHint: (nodeId: string) => void;
   renameNode: (id: string, text: string) => void;
   setNodeCategory: (id: string, category: Category) => void;
   moveNode: (id: string, position: { x: number; y: number }) => void;
@@ -92,6 +105,11 @@ function makeLog(topic: Topic): SessionLog {
     randomWordCount: 0,
     answerCount: 0,
     finalAnswer: null,
+    aruaruCount: 0,
+    aruaruSelfCount: 0,
+    hintOpenCount: 0,
+    hintNodeCount: 0,
+    hintMissWords: [],
   };
 }
 
@@ -157,8 +175,9 @@ export const useSession = create<SessionState>()(
     (set, get) => ({
       ...freshSession(PRESET_TOPICS[0].id),
 
-      addNode: (parentId, rawText, category) => {
-        const text = rawText.trim().slice(0, MAX_TEXT);
+      addNode: (parentId, rawText, category, kind = 'word', source = 'self') => {
+        const limit = kind === 'aruaru' ? MAX_ARUARU_TEXT : MAX_TEXT;
+        const text = rawText.trim().slice(0, limit);
         if (!text) return null;
         const s = get();
         if (!s.nodes.some((n) => n.id === parentId)) return null;
@@ -167,7 +186,9 @@ export const useSession = create<SessionState>()(
           text,
           parentId,
           category,
-          position: childPosition(s.nodes, parentId, text),
+          kind,
+          source,
+          position: childPosition(s.nodes, parentId, text, kind),
         };
         const edge: IdeaEdge = {
           id: uid('e'),
@@ -182,7 +203,14 @@ export const useSession = create<SessionState>()(
             edges: [...s.edges, edge],
           }),
           selectedIds: [node.id],
-          log: { ...s.log, createdNodeCount: s.log.createdNodeCount + 1 },
+          log: {
+            ...s.log,
+            createdNodeCount: s.log.createdNodeCount + 1,
+            aruaruCount: s.log.aruaruCount + (kind === 'aruaru' ? 1 : 0),
+            aruaruSelfCount:
+              s.log.aruaruSelfCount + (kind === 'aruaru' && source === 'self' ? 1 : 0),
+            hintNodeCount: s.log.hintNodeCount + (source === 'hint' ? 1 : 0),
+          },
         });
         return node.id;
       },
@@ -353,6 +381,35 @@ export const useSession = create<SessionState>()(
         });
       },
 
+      openAruaruHint: (nodeId) => {
+        const s = get();
+        const node = s.nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+        const items = lookupAruaru(node.text);
+        set({
+          card: {
+            kind: 'aruaru',
+            title: 'お手本',
+            subtitle: node.text,
+            body: items
+              ? '多くの人が共有している前提。ここを裏切ると笑いになる。'
+              : 'この言葉のお手本はまだ用意していません。自分で書いてみてください。',
+            prompt: items
+              ? '自分の言葉に直してから取り込んでください'
+              : '「〜しがち」「〜あるよね」で終わる形にすると書きやすい',
+            nodeIds: [node.id],
+            seed: '',
+            items: items ?? [],
+            at: Date.now(),
+          },
+          log: {
+            ...s.log,
+            hintOpenCount: s.log.hintOpenCount + 1,
+            hintMissWords: items ? s.log.hintMissWords : [...s.log.hintMissWords, node.text],
+          },
+        });
+      },
+
       clearCard: () => set({ card: null }),
 
       autoLayout: () => {
@@ -390,6 +447,7 @@ export const useSession = create<SessionState>()(
           nodeCount: stats.volume,
           maxDepth: stats.depth,
           crossEdgeCount: stats.cross,
+          aruaruCount: stats.aruaru,
           answerCount: answers.length,
           finalAnswer: chosen?.text ?? null,
         };

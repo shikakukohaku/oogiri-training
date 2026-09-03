@@ -1,4 +1,4 @@
-import type { IdeaNode } from '../types';
+import type { IdeaNode, NodeKind } from '../types';
 import { buildIndex } from './tree';
 
 const RING = 235;
@@ -9,13 +9,14 @@ const RING = 235;
  */
 function sizeOf(node: IdeaNode): { w: number; h: number } {
   const isRoot = node.parentId === null;
-  const maxW = isRoot ? 250 : 192;
-  const charW = isRoot ? 19 : 15;
+  const isAruaru = node.kind === 'aruaru';
+  const maxW = isRoot ? 250 : isAruaru ? 262 : 192;
+  const charW = isRoot ? 19 : isAruaru ? 13.5 : 15;
   const pad = isRoot ? 40 : 30;
   const w = Math.min(maxW, pad + node.text.length * charW);
   const perLine = Math.max(1, Math.floor((w - pad) / charW));
   const lines = Math.max(1, Math.ceil(node.text.length / perLine));
-  const h = (isRoot ? 34 : 24) + lines * (isRoot ? 26 : 19);
+  const h = (isRoot ? 34 : 24) + lines * (isRoot ? 26 : isAruaru ? 20 : 19);
   return { w, h };
 }
 
@@ -25,8 +26,8 @@ function centerOf(node: IdeaNode): { x: number; y: number } {
 }
 
 /** 中心座標を、そのテキストのノードの左上座標に直す */
-function topLeft(center: { x: number; y: number }, text: string, isRoot: boolean) {
-  const { w, h } = sizeOf({ text, parentId: isRoot ? null : 'x' } as IdeaNode);
+function topLeft(center: { x: number; y: number }, text: string, kind: NodeKind) {
+  const { w, h } = sizeOf({ text, parentId: 'x', kind } as IdeaNode);
   return { x: center.x - w / 2, y: center.y - h / 2 };
 }
 
@@ -35,6 +36,7 @@ export function childPosition(
   nodes: IdeaNode[],
   parentId: string,
   text = '',
+  kind: NodeKind = 'word',
 ): { x: number; y: number } {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const parent = byId.get(parentId);
@@ -43,6 +45,23 @@ export function childPosition(
   const pc = centerOf(parent);
   const siblings = nodes.filter((n) => n.parentId === parentId);
   const i = siblings.length;
+
+  // あるあるは横長なので扇状に開くと重なる。親の外向きに縦へ積む
+  if (kind === 'aruaru') {
+    const gp = parent.parentId ? byId.get(parent.parentId) : undefined;
+    const gc = gp ? centerOf(gp) : undefined;
+    const dir = gc ? Math.atan2(pc.y - gc.y, pc.x - gc.x) : 0;
+    const stacked = siblings.filter((n) => n.kind === 'aruaru').length;
+    const r = 265;
+    return topLeft(
+      {
+        x: pc.x + Math.cos(dir) * r,
+        y: pc.y + Math.sin(dir) * r + stacked * 80,
+      },
+      text,
+      kind,
+    );
+  }
 
   if (parent.parentId === null) {
     // Root の周りは放射状のリングに並べる
@@ -53,7 +72,7 @@ export function childPosition(
     return topLeft(
       { x: pc.x + Math.cos(angle) * r, y: pc.y + Math.sin(angle) * r },
       text,
-      false,
+      kind,
     );
   }
 
@@ -64,7 +83,7 @@ export function childPosition(
   const k = Math.ceil(i / 2) * (i % 2 === 1 ? -1 : 1);
   const angle = dir + k * 0.52;
   const r = 195;
-  return topLeft({ x: pc.x + Math.cos(angle) * r, y: pc.y + Math.sin(angle) * r }, text, false);
+  return topLeft({ x: pc.x + Math.cos(angle) * r, y: pc.y + Math.sin(angle) * r }, text, kind);
 }
 
 /** 全体を放射状に組み直す（自動レイアウト）。 */
@@ -93,7 +112,7 @@ export function radialLayout(nodes: IdeaNode[]): IdeaNode[] {
     for (const child of children) {
       const span = ((to - from) * countLeaves(child.id)) / total;
       const angle = cursor + span / 2;
-      const r = RING + (depth - 1) * 185;
+      const r = RING + (depth - 1) * 215;
       centers.set(child.id, { x: Math.cos(angle) * r, y: Math.sin(angle) * r });
       walk(child.id, cursor, cursor + span, depth + 1);
       cursor += span;

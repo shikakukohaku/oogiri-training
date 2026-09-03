@@ -1,11 +1,18 @@
 import type { Answer, IdeaEdge, IdeaNode, OperatorUsage, Stats } from '../types';
 import { computeStats } from './tree';
 
+export interface MissionContext {
+  stats: Stats;
+  answers: Answer[];
+  /** あるあるノードを対象にずらしを使ったか */
+  shiftedAruaru: boolean;
+}
+
 export interface Mission {
   id: string;
   label: string;
-  done: (ctx: { stats: Stats; answers: Answer[] }) => boolean;
-  progress: (ctx: { stats: Stats; answers: Answer[] }) => [number, number];
+  done: (ctx: MissionContext) => boolean;
+  progress: (ctx: MissionContext) => [number, number];
 }
 
 export const MISSIONS: Mission[] = [
@@ -16,22 +23,22 @@ export const MISSIONS: Mission[] = [
     progress: ({ stats }) => [Math.min(stats.volume, 5), 5],
   },
   {
-    id: 'deep3',
-    label: 'どれか1本を3段以上深掘りしよう',
-    done: ({ stats }) => stats.depth >= 3,
-    progress: ({ stats }) => [Math.min(stats.depth, 3), 3],
+    id: 'aruaru3',
+    label: '「あるある」を3つ出そう',
+    done: ({ stats }) => stats.aruaru >= 3,
+    progress: ({ stats }) => [Math.min(stats.aruaru, 3), 3],
+  },
+  {
+    id: 'shiftAruaru',
+    label: 'あるあるをずらしてみよう',
+    done: ({ shiftedAruaru }) => shiftedAruaru,
+    progress: ({ shiftedAruaru }) => [shiftedAruaru ? 1 : 0, 1],
   },
   {
     id: 'cross1',
     label: '離れた2つの枝を繋いでみよう',
     done: ({ stats }) => stats.cross >= 1,
     progress: ({ stats }) => [Math.min(stats.cross, 1), 1],
-  },
-  {
-    id: 'shift1',
-    label: 'ずらしを1つ使ってみよう',
-    done: ({ stats }) => stats.shifts >= 1,
-    progress: ({ stats }) => [Math.min(stats.shifts, 1), 1],
   },
   {
     id: 'answer3',
@@ -41,6 +48,12 @@ export const MISSIONS: Mission[] = [
   },
 ];
 
+/** あるあるノードに対してずらしを使ったことがあるか */
+export function hasShiftedAruaru(nodes: IdeaNode[], operatorUsages: OperatorUsage[]): boolean {
+  const aruaru = new Set(nodes.filter((n) => n.kind === 'aruaru').map((n) => n.id));
+  return operatorUsages.some((u) => u.selectedNodeIds.some((id) => aruaru.has(id)));
+}
+
 /** 現在の状態から、達成済みミッション id を求める。 */
 export function achievedMissions(
   nodes: IdeaNode[],
@@ -49,5 +62,6 @@ export function achievedMissions(
   answers: Answer[],
 ): string[] {
   const stats = computeStats(nodes, edges, operatorUsages);
-  return MISSIONS.filter((m) => m.done({ stats, answers })).map((m) => m.id);
+  const shiftedAruaru = hasShiftedAruaru(nodes, operatorUsages);
+  return MISSIONS.filter((m) => m.done({ stats, answers, shiftedAruaru })).map((m) => m.id);
 }
