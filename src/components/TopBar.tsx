@@ -8,6 +8,7 @@ import { TopicEditor } from './TopicEditor';
 
 export function TopBar() {
   const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const customTopics = useTopics((s) => s.custom);
   const topicId = useSession((s) => s.topicId);
   const setTopic = useSession((s) => s.setTopic);
@@ -32,7 +33,19 @@ export function TopBar() {
         <span className="topbar-tag">お題</span>
         <h1 className="topbar-topic">{topic.text}</h1>
       </div>
-      <div className="topbar-tools">
+      <button
+        type="button"
+        className={`btn topbar-menu-btn${menuOpen ? ' is-on' : ''}`}
+        aria-expanded={menuOpen}
+        aria-label="メニュー"
+        onClick={() => {
+          setMenuOpen((v) => !v);
+          setEditing(false);
+        }}
+      >
+        ≡
+      </button>
+      <div className={`topbar-tools${menuOpen ? ' is-open' : ''}`}>
         <select
           className="topic-select"
           value={topicId}
@@ -65,7 +78,10 @@ export function TopBar() {
           className={`btn btn-add-topic${editing ? ' is-open' : ''}`}
           title="自分でお題を作る"
           aria-expanded={editing}
-          onClick={() => setEditing((v) => !v)}
+          onClick={() => {
+            setEditing((v) => !v);
+            setMenuOpen(false);
+          }}
         >
           ＋お題
         </button>
@@ -119,6 +135,13 @@ export function TopBar() {
           </button>
         </span>
       </div>
+      {menuOpen && (
+        <div
+          className="topbar-menu-backdrop"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
       {editing && (
         <>
           <div className="topic-editor-backdrop" onClick={() => setEditing(false)} />
