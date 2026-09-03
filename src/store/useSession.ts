@@ -38,6 +38,9 @@ export type Phase = 'map' | 'result';
 interface SessionState extends Doc {
   topicId: string;
   selectedIds: string[];
+  /** タップだけで枝を繋ぐためのモード（Shift+クリックが使えない端末向け） */
+  connectMode: boolean;
+  connectFirstId: string | null;
   card: SparkCard | null;
   lastWord: string | null;
   phase: Phase;
@@ -53,6 +56,9 @@ interface SessionState extends Doc {
   connectNodes: (source: string, target: string) => void;
   deleteEdges: (ids: string[]) => void;
   setSelected: (ids: string[]) => void;
+  startConnectMode: () => void;
+  cancelConnectMode: () => void;
+  tapConnect: (nodeId: string) => void;
   applyOperator: (operator: OperatorId) => void;
   rollRandomWord: () => void;
   clearCard: () => void;
@@ -131,6 +137,8 @@ function freshSession(topicId: string) {
     topicId: topic.id,
     ...makeDoc(topic),
     selectedIds: [] as string[],
+    connectMode: false,
+    connectFirstId: null as string | null,
     card: null,
     lastWord: null,
     phase: 'map' as Phase,
@@ -241,6 +249,8 @@ export const useSession = create<SessionState>()(
         const b = s.nodes.find((n) => n.id === target);
         set({
           ...commit(s, { ...snapshot(s), edges: [...s.edges, edge] }),
+          connectMode: false,
+          connectFirstId: null,
           card: {
             kind: 'combine',
             title: '枝が繋がった',
@@ -264,6 +274,25 @@ export const useSession = create<SessionState>()(
 
       setSelected: (ids) =>
         set((s) => (sameIds(s.selectedIds, ids) ? s : { ...s, selectedIds: ids })),
+
+      startConnectMode: () => set({ connectMode: true, connectFirstId: null, selectedIds: [] }),
+
+      cancelConnectMode: () => set({ connectMode: false, connectFirstId: null }),
+
+      tapConnect: (nodeId) => {
+        const s = get();
+        if (!s.connectMode) return;
+        if (!s.connectFirstId) {
+          set({ connectFirstId: nodeId });
+          return;
+        }
+        if (s.connectFirstId === nodeId) {
+          set({ connectFirstId: null });
+          return;
+        }
+        // connectNodes 側でモードを閉じる
+        s.connectNodes(s.connectFirstId, nodeId);
+      },
 
       applyOperator: (operator) => {
         const s = get();

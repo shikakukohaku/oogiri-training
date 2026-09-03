@@ -51,6 +51,15 @@ body,
   margin: 0;
 }
 
+/* iOS Safari のツールバー伸縮に追従させる */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -691,7 +700,7 @@ body::after {
   flex: 1;
   min-width: 180px;
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   padding: 8px 11px;
   border: 2.5px solid var(--ink);
@@ -746,7 +755,7 @@ body::after {
 .answer-input {
   flex: 1;
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   padding: 8px 11px;
   border: 2.5px solid var(--ink);
@@ -818,6 +827,9 @@ body::after {
 .idea-node {
   position: relative;
   cursor: grab;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .idea-card {
@@ -1257,7 +1269,7 @@ body::after {
 
 .topic-field input {
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   padding: 7px 10px;
   border: 2.5px solid var(--ink);
@@ -1313,6 +1325,148 @@ body::after {
 .topic-list p {
   margin: 0;
   font-size: 12px;
+}
+
+/* ---------- 線でつなぐモード ---------- */
+
+.idea-node.is-connecting .idea-card {
+  outline: 2.5px dashed var(--teal);
+  outline-offset: 5px;
+}
+
+/* つなぐモード中は接続点と＋ボタンを無効にして、タップの行き先を1つに絞る */
+.idea-node.is-connecting .react-flow__handle {
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.idea-node.is-connecting .idea-add {
+  display: none;
+}
+
+.idea-node.is-picked .idea-card {
+  outline: 4px solid var(--teal);
+  outline-offset: 5px;
+}
+
+.btn-connect.is-on {
+  background: var(--teal);
+  border-style: solid;
+  color: #fffdf4;
+}
+
+.connect-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fffdf4;
+  background: var(--teal);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: var(--pop);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ---------- 指で操作する端末 ---------- */
+
+@media (hover: none) {
+  /* hover が無いので、隠していたものは最初から見せる */
+  .react-flow__handle {
+    opacity: 0.85;
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 見た目より広く当たるようにする */
+  .react-flow__handle::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+  }
+
+  .react-flow__handle-left {
+    left: -8px;
+  }
+
+  .react-flow__handle-right {
+    right: -8px;
+  }
+
+  .react-flow__handle-top {
+    top: -8px;
+  }
+
+  .react-flow__handle-bottom {
+    bottom: -8px;
+  }
+
+  .idea-add {
+    opacity: 1;
+    width: 30px;
+    height: 30px;
+    right: -14px;
+    bottom: -14px;
+    font-size: 19px;
+  }
+
+  .idea-card {
+    padding: 11px 14px 12px;
+    font-size: 15px;
+  }
+
+  .idea-edit {
+    font-size: 16px;
+  }
+
+  /* 指で押せる大きさにする */
+  .btn {
+    min-height: 40px;
+    padding: 8px 13px;
+  }
+
+  .btn-small {
+    min-height: 34px;
+  }
+
+  .chip {
+    min-height: 34px;
+    padding: 4px 13px;
+  }
+
+  .topic-select {
+    min-height: 40px;
+  }
+
+  .op-btn {
+    min-height: 52px;
+  }
+
+  .answer .btn-small {
+    min-height: 38px;
+  }
+
+  .react-flow__controls-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .react-flow__minimap {
+    display: none;
+  }
+
+  /* タップでは押しっぱなしの見た目が残るので、hover の演出は消す */
+  .btn:hover:not(:disabled),
+  .op-btn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: var(--pop);
+  }
 }
 
 /* ---------- キャンバス周り ---------- */
@@ -1372,6 +1526,16 @@ body::after {
 
 /* ---------- 狭い画面 ---------- */
 
+@media (min-width: 901px) and (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .op-hint {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -1422,7 +1586,9 @@ body::after {
 
   .side-actions {
     position: static;
-    margin: 6px 0 0;
+    /* 入力欄のすぐ下に来るように、パネルより前へ出す */
+    order: -1;
+    margin: 0 0 2px;
     padding: 0;
     border-top: none;
   }
