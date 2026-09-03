@@ -8,20 +8,29 @@ export function QuickAdd() {
   const nodes = useSession((s) => s.nodes);
   const selectedIds = useSession((s) => s.selectedIds);
   const addNode = useSession((s) => s.addNode);
+  const setSelected = useSession((s) => s.setSelected);
   const openAruaruHint = useSession((s) => s.openAruaruHint);
 
   const [text, setText] = useState('');
   const [category, setCategory] = useState<Category>('other');
-  const [kind, setKind] = useState<NodeKind>('word');
-  const [pinned, setPinned] = useState<string | null>(null);
+  // お題が変わったら単語モードに戻す。あるあるのまま持ち越すと、まっさらな
+  // マップでいきなりお題のあるあるを書かされることになる。
+  // どのお題で選んだ状態なのかを一緒に持つことで、実行時に導出できる
+  const [chosenKind, setChosenKind] = useState<{ rootId: string | null; kind: NodeKind }>({
+    rootId: null,
+    kind: 'word',
+  });
   // お手本から流し込まれた文か。書き直しても由来は由来として残す
   const [fromHint, setFromHint] = useState(false);
   const [notice, setNotice] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastCreated = useRef<string | null>(null);
 
   const rootId = useMemo(() => nodes.find((n) => n.parentId === null)?.id ?? null, [nodes]);
-  const targetId = pinned ?? selectedIds[0] ?? rootId;
+  const kind: NodeKind = chosenKind.rootId === rootId ? chosenKind.kind : 'word';
+  const setKind = (next: NodeKind) => setChosenKind({ rootId, kind: next });
+  // 追加先は「いま選んでいるノード」。別に固定を持つと、作った直後のノードを
+  // クリックしても選択が変わらず（すでに選択済みなので）固定が外れなくなる
+  const targetId = selectedIds[0] ?? rootId;
   const target = nodes.find((n) => n.id === targetId) ?? null;
 
   // あるあるのあるあるは作れない。対象が文なら単語モードに戻す
@@ -36,11 +45,6 @@ export function QuickAdd() {
     [nodes, targetId],
   );
 
-  // ユーザーが自分で別のノードを選び直したら pin を外す
-  useEffect(() => {
-    if (selectedIds[0] !== lastCreated.current) setPinned(null);
-  }, [selectedIds]);
-
   useEffect(
     () =>
       on(FOCUS_ADD, (detail) => {
@@ -50,16 +54,13 @@ export function QuickAdd() {
           kind?: NodeKind;
           source?: NodeSource;
         };
-        if (d.nodeId) {
-          lastCreated.current = d.nodeId;
-          setPinned(d.nodeId);
-        }
-        if (d.kind) setKind(d.kind);
+        if (d.nodeId) setSelected([d.nodeId]);
+        if (d.kind) setChosenKind({ rootId, kind: d.kind });
         if (d.text) setText(d.text);
         setFromHint(d.source === 'hint');
         inputRef.current?.focus();
       }),
-    [],
+    [setSelected, rootId],
   );
 
   const submit = (dive: boolean) => {
@@ -75,9 +76,8 @@ export function QuickAdd() {
     setText('');
     setFromHint(false);
     setNotice('');
-    lastCreated.current = id;
-    // あるあるは同じ言葉に並べたいので、掘らずに追加先を保つ
-    setPinned(mode === 'aruaru' ? targetId : dive ? id : targetId);
+    // Shift+Enter のときだけ、生えたノードへ潜る（あるあるは同じ言葉に並べたい）
+    if (dive && mode === 'word') setSelected([id]);
     inputRef.current?.focus();
   };
 
@@ -135,7 +135,6 @@ export function QuickAdd() {
               submit(e.shiftKey);
             } else if (e.key === 'Escape') {
               e.preventDefault();
-              setPinned(null);
               inputRef.current?.blur();
             }
           }}

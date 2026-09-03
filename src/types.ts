@@ -98,6 +98,12 @@ export interface SparkCard {
   seed: string;
   /** kind === 'aruaru' のときのお手本一覧 */
   items?: string[];
+  /** 取得中 */
+  loading?: boolean;
+  /** お手本の出どころ。AI から来たのか、手元の辞書なのか */
+  source?: 'ai' | 'preset';
+  /** 取得に失敗したときの理由 */
+  error?: string;
   at: number;
 }
 
@@ -125,6 +131,8 @@ export interface SessionLog {
   hintOpenCount: number;
   /** お手本から取り込んだノード数 */
   hintNodeCount: number;
+  /** AI から出したお手本の回数 */
+  aiHintCount: number;
   /** お手本を求められたが用意が無かった言葉。本物のAI化を判断する材料 */
   hintMissWords: string[];
 }

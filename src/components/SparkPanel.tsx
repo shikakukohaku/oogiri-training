@@ -37,6 +37,13 @@ export function SparkPanel() {
         <div className="spark-subtitle">{card.subtitle}</div>
         <p className="spark-body">{card.body}</p>
 
+        {card.loading && (
+          <p className="hint-loading">
+            <span className="hint-spinner" aria-hidden="true" />
+            考え中…
+          </p>
+        )}
+
         {card.kind === 'aruaru' && card.items && card.items.length > 0 && (
           <ul className="hint-list">
             {card.items.map((item) => (
@@ -62,7 +69,15 @@ export function SparkPanel() {
           </ul>
         )}
 
-        <p className="spark-prompt">{card.prompt}</p>
+        {card.kind === 'aruaru' && !card.loading && card.items && card.items.length > 0 && (
+          <p className="hint-source">
+            {card.source === 'ai'
+              ? 'このお題に合わせて出しました'
+              : '手元の見本（お題は見ていません）'}
+          </p>
+        )}
+
+        {card.prompt && <p className="spark-prompt">{card.prompt}</p>}
         {card.kind !== 'aruaru' && (
           <div className="spark-actions">
             <button

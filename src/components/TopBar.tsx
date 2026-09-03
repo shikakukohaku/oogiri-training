@@ -5,10 +5,12 @@ import { topicById, useTopics } from '../store/useTopics';
 import { exportLogsCsv, exportLogsJson } from '../lib/logs';
 import { emit, FIT_VIEW } from '../lib/bus';
 import { TopicEditor } from './TopicEditor';
+import { HintSettings } from './HintSettings';
 
 export function TopBar() {
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const customTopics = useTopics((s) => s.custom);
   const topicId = useSession((s) => s.topicId);
   const setTopic = useSession((s) => s.setTopic);
@@ -41,6 +43,7 @@ export function TopBar() {
         onClick={() => {
           setMenuOpen((v) => !v);
           setEditing(false);
+          setHintOpen(false);
         }}
       >
         ≡
@@ -81,6 +84,7 @@ export function TopBar() {
           onClick={() => {
             setEditing((v) => !v);
             setMenuOpen(false);
+            setHintOpen(false);
           }}
         >
           ＋お題
@@ -126,6 +130,17 @@ export function TopBar() {
         >
           次のお題
         </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            setHintOpen((v) => !v);
+            setMenuOpen(false);
+            setEditing(false);
+          }}
+        >
+          お手本の設定
+        </button>
         <span className="topbar-export">
           <button type="button" className="btn btn-small" onClick={() => exportLogsJson(log)}>
             JSON
@@ -146,6 +161,12 @@ export function TopBar() {
         <>
           <div className="topic-editor-backdrop" onClick={() => setEditing(false)} />
           <TopicEditor onClose={() => setEditing(false)} />
+        </>
+      )}
+      {hintOpen && (
+        <>
+          <div className="topic-editor-backdrop" onClick={() => setHintOpen(false)} />
+          <HintSettings onClose={() => setHintOpen(false)} />
         </>
       )}
     </header>

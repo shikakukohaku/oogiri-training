@@ -1525,6 +1525,71 @@ body::after {
   border-radius: 7px;
 }
 
+/* ---------- お手本の取得中と出どころ ---------- */
+
+.hint-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.hint-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2.5px solid var(--line-strong);
+  border-top-color: var(--violet);
+  border-radius: 50%;
+  animation: hint-spin 0.7s linear infinite;
+}
+
+@keyframes hint-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hint-source {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.hint-settings {
+  --tone: var(--violet);
+  box-shadow: 6px 7px 0 var(--violet);
+}
+
+.hint-settings-lead {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.hint-settings-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.hint-settings-note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.hint-settings-note code {
+  font-size: 11px;
+  padding: 1px 5px;
+  background: var(--paper);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 4px;
+}
+
 /* ---------- 線でつなぐモード ---------- */
 
 .idea-node.is-connecting .idea-card {
