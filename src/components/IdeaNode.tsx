@@ -14,6 +14,10 @@ export type IdeaNodeData = {
   depth: number;
   /** 枝ごとの色。刷りズレのような影に使う */
   tone: string;
+  /** 「線でつなぐ」モード中か */
+  connecting: boolean;
+  /** つなぐ1つ目として選ばれているか */
+  picked: boolean;
 };
 
 export type IdeaFlowNode = Node<IdeaNodeData, 'idea'>;
@@ -38,9 +42,11 @@ function tiltOf(id: string): number {
 
 function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
   const renameNode = useSession((s) => s.renameNode);
+  const tapConnect = useSession((s) => s.tapConnect);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(data.text);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pressedAt = useRef<{ x: number; y: number } | null>(null);
   const cat = categoryDef(data.category);
   const tilt = useMemo(() => (data.isRoot ? -0.7 : tiltOf(id)), [id, data.isRoot]);
 
@@ -56,10 +62,30 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
 
   return (
     <div
-      className={`idea-node${data.isRoot ? ' is-root' : ''}${selected ? ' is-selected' : ''}`}
+      className={
+        'idea-node' +
+        (data.isRoot ? ' is-root' : '') +
+        (selected ? ' is-selected' : '') +
+        (data.connecting ? ' is-connecting' : '') +
+        (data.picked ? ' is-picked' : '')
+      }
       onDoubleClick={() => {
         setDraft(data.text);
         setEditing(true);
+      }}
+      onPointerDownCapture={(e) => {
+        pressedAt.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerUpCapture={(e) => {
+        const from = pressedAt.current;
+        pressedAt.current = null;
+        if (!data.connecting || !from) return;
+        // ノード内のボタンや入力欄を押したときは対象に選ばない
+        const target = e.target as HTMLElement;
+        if (target.closest('.idea-add') || target.closest('input')) return;
+        // 動かしていたなら「つなぐ相手を選んだ」とは見なさない
+        if (Math.hypot(e.clientX - from.x, e.clientY - from.y) > 8) return;
+        tapConnect(id);
       }}
       title={data.isRoot ? 'お題' : 'ダブルクリックで書き換え'}
     >

@@ -44,6 +44,8 @@ export function MindMap() {
   const deleteNodes = useSession((s) => s.deleteNodes);
   const connectNodes = useSession((s) => s.connectNodes);
   const setSelected = useSession((s) => s.setSelected);
+  const connectMode = useSession((s) => s.connectMode);
+  const connectFirstId = useSession((s) => s.connectFirstId);
 
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
   const { fitView, flowToScreenPosition, getViewport, setViewport } = useReactFlow();
@@ -116,15 +118,18 @@ export function MindMap() {
         position: n.position,
         selected: selectedIds.includes(n.id),
         deletable: n.parentId !== null,
+        draggable: !connectMode,
         data: {
           text: n.text,
           category: n.category,
           isRoot: n.parentId === null,
           depth: depthOf.get(n.id) ?? 0,
           tone: tones.get(n.id) ?? '#1b1a17',
+          connecting: connectMode,
+          picked: connectFirstId === n.id,
         },
       })),
-    [nodes, selectedIds, depthOf, tones],
+    [nodes, selectedIds, depthOf, tones, connectMode, connectFirstId],
   );
 
   const rfEdges: Edge[] = useMemo(() => {
@@ -207,7 +212,7 @@ export function MindMap() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         connectionMode={ConnectionMode.Loose}
-        connectionRadius={34}
+        connectionRadius={44}
         multiSelectionKeyCode={['Shift', 'Meta', 'Control']}
         deleteKeyCode={['Delete', 'Backspace']}
         selectionKeyCode={null}
@@ -228,6 +233,11 @@ export function MindMap() {
         />
         <Controls showInteractive={false} />
       </ReactFlow>
+      {connectMode && (
+        <div className="connect-hint">
+          {connectFirstId ? 'つなぐ相手をタップ' : '繋ぎたいノードをタップ'}
+        </div>
+      )}
     </div>
   );
 }

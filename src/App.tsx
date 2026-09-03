@@ -30,6 +30,8 @@ export default function App() {
   const redo = useSession((s) => s.redo);
   const rollRandomWord = useSession((s) => s.rollRandomWord);
   const backToMap = useSession((s) => s.backToMap);
+  const connectMode = useSession((s) => s.connectMode);
+  const cancelConnectMode = useSession((s) => s.cancelConnectMode);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -50,6 +52,10 @@ export default function App() {
         if (e.key === 'Escape') backToMap();
         return;
       }
+      if (e.key === 'Escape' && connectMode) {
+        cancelConnectMode();
+        return;
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
         emit(FOCUS_ADD, {});
@@ -60,7 +66,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, rollRandomWord, phase, backToMap]);
+  }, [undo, redo, rollRandomWord, phase, backToMap, connectMode, cancelConnectMode]);
 
   return (
     <div className="app">
@@ -80,8 +86,8 @@ export default function App() {
           <SparkPanel />
           <OperatorPanel />
           <p className="help">
-            クリックで選択 / Shift+クリックで2つ選択 / ノードの縁の点をドラッグで線を繋ぐ /
-            ダブルクリックで書き換え / Delete で削除 / R で飛び地
+            タップ / クリックで選択 / ノードの縁の点をドラッグで線を繋ぐ（「線でつなぐ」を押して
+            2つタップでも繋がる）/ ダブルタップで書き換え / Delete で削除 / R で飛び地
           </p>
           <SideActions />
         </aside>
