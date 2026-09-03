@@ -116,8 +116,9 @@ LocalStorage のキー：
 2. あとは push するたびに `.github/workflows/deploy.yml` がビルドして公開する
 3. 公開先は `https://shikakukohaku.github.io/oogiri-training/`
 
-ワークフローは `main` と作業ブランチ `claude/oogiri-ideation-training-mvp-cy4uwr` の push で動く。
-`main` にマージしたら、ワークフローのブランチ指定からその行を消してよい。
+ワークフローは `main` への push で動く。`github-pages` 環境の保護ルールにより、
+デフォルトブランチ以外からはデプロイできない（作業ブランチから公開したい場合は
+Settings → Environments → github-pages にそのブランチを追加する）。
 
 リポジトリ名のサブパスで配信されるため、ビルド時の `base` は `/oogiri-training/` にしてある
 （`vite.config.ts`）。`npm run dev` は今までどおり `/` で動く。
