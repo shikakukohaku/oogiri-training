@@ -83,7 +83,7 @@ export function QuickAdd() {
             key={c.id}
             type="button"
             className={`chip${category === c.id ? ' is-on' : ''}`}
-            style={{ background: c.color, color: c.ink, borderColor: c.ink }}
+            style={{ background: c.color }}
             onClick={() => {
               setCategory(c.id);
               inputRef.current?.focus();

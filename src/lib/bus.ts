@@ -1,6 +1,7 @@
 /** 小さな用途限定のイベントバス（ノードから入力欄へフォーカスを渡すだけ） */
 export const FOCUS_ADD = 'oogiri:focus-add';
 export const FOCUS_ANSWER = 'oogiri:focus-answer';
+export const FIT_VIEW = 'oogiri:fit-view';
 
 export function emit(name: string, detail?: unknown): void {
   window.dispatchEvent(new CustomEvent(name, { detail }));

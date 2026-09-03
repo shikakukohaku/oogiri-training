@@ -11,7 +11,7 @@ export function OperatorPanel() {
     .filter((n): n is NonNullable<typeof n> => Boolean(n));
 
   return (
-    <section className="panel">
+    <section className="panel panel-op">
       <h2 className="panel-title">ずらし</h2>
       <p className="panel-sub">
         {picked.length === 0 ? (

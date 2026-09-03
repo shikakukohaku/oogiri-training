@@ -10,9 +10,11 @@ export type Category =
 
 export interface CategoryDef {
   id: Category;
-  label: string;
+  /** 付箋の地色 */
   color: string;
-  ink: string;
+  /** 枝線やラベルに使う濃い同系色 */
+  deep: string;
+  label: string;
 }
 
 export interface Topic {

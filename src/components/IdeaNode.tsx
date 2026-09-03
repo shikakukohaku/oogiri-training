@@ -1,4 +1,5 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import type { Category } from '../types';
@@ -11,6 +12,8 @@ export type IdeaNodeData = {
   category: Category;
   isRoot: boolean;
   depth: number;
+  /** 枝ごとの色。刷りズレのような影に使う */
+  tone: string;
 };
 
 export type IdeaFlowNode = Node<IdeaNodeData, 'idea'>;
@@ -26,12 +29,20 @@ const HANDLES = [
   { id: 't-b', type: 'target', position: Position.Bottom },
 ] as const;
 
+/** id から決まる、手で貼ったような傾き */
+function tiltOf(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 1000;
+  return ((h % 9) - 4) * 0.3;
+}
+
 function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
   const renameNode = useSession((s) => s.renameNode);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(data.text);
   const inputRef = useRef<HTMLInputElement>(null);
   const cat = categoryDef(data.category);
+  const tilt = useMemo(() => (data.isRoot ? -0.7 : tiltOf(id)), [id, data.isRoot]);
 
   useEffect(() => {
     if (editing) inputRef.current?.select();
@@ -46,11 +57,6 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
   return (
     <div
       className={`idea-node${data.isRoot ? ' is-root' : ''}${selected ? ' is-selected' : ''}`}
-      style={
-        data.isRoot
-          ? undefined
-          : { background: cat.color, color: cat.ink, borderColor: cat.ink }
-      }
       onDoubleClick={() => {
         setDraft(data.text);
         setEditing(true);
@@ -67,42 +73,57 @@ function IdeaNodeViewBase({ id, data, selected }: NodeProps<IdeaFlowNode>) {
         />
       ))}
 
-      {editing ? (
-        <input
-          ref={inputRef}
-          className="idea-edit nodrag"
-          value={draft}
-          maxLength={60}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') {
-              setDraft(data.text);
-              setEditing(false);
-            }
-          }}
-        />
-      ) : (
-        <span className="idea-text">{data.text}</span>
-      )}
-
-      {!data.isRoot && data.category !== 'other' && (
-        <span className="idea-cat">{cat.label}</span>
-      )}
-
-      <button
-        type="button"
-        className="idea-add nodrag nopan"
-        title="ここから子ノードを追加"
-        onClick={(e) => {
-          e.stopPropagation();
-          emit(FOCUS_ADD, { nodeId: id });
-        }}
+      <div
+        className="idea-card"
+        style={
+          {
+            transform: `rotate(${tilt}deg)`,
+            background: data.isRoot ? undefined : cat.color,
+            '--tone': data.tone,
+          } as CSSProperties
+        }
       >
-        +
-      </button>
+        {data.isRoot && <span className="idea-tape" aria-hidden="true" />}
+
+        {editing ? (
+          <input
+            ref={inputRef}
+            className="idea-edit nodrag"
+            value={draft}
+            maxLength={60}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') {
+                setDraft(data.text);
+                setEditing(false);
+              }
+            }}
+          />
+        ) : (
+          <span className="idea-text">{data.text}</span>
+        )}
+
+        {!data.isRoot && data.category !== 'other' && (
+          <span className="idea-cat" style={{ background: cat.deep }}>
+            {cat.label}
+          </span>
+        )}
+
+        <button
+          type="button"
+          className="idea-add nodrag nopan"
+          title="ここから子ノードを追加"
+          onClick={(e) => {
+            e.stopPropagation();
+            emit(FOCUS_ADD, { nodeId: id });
+          }}
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }

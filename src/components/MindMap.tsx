@@ -10,12 +10,14 @@ import {
 } from '@xyflow/react';
 import type { Connection, Edge, EdgeChange, NodeChange } from '@xyflow/react';
 import { useSession } from '../store/useSession';
-import { buildIndex } from '../lib/tree';
-import { categoryDef } from '../data/categories';
+import { branchColors, buildIndex } from '../lib/tree';
+import { FIT_VIEW, on } from '../lib/bus';
 import { IdeaNodeView } from './IdeaNode';
 import type { IdeaFlowNode } from './IdeaNode';
+import { SketchEdge } from './SketchEdge';
 
 const nodeTypes = { idea: IdeaNodeView };
+const edgeTypes = { sketch: SketchEdge };
 
 /** 位置関係から、見た目が自然になる Handle の組み合わせを選ぶ */
 function pickHandles(
@@ -91,7 +93,20 @@ export function MindMap() {
     }
   }, [nodes, flowToScreenPosition, getViewport, setViewport]);
 
-  const depthOf = useMemo(() => buildIndex(nodes).depthOf, [nodes]);
+  useEffect(
+    () =>
+      on(FIT_VIEW, () => {
+        window.setTimeout(
+          () => fitView({ padding: 0.2, duration: 340, minZoom: 0.5, maxZoom: 1 }),
+          20,
+        );
+      }),
+    [fitView],
+  );
+
+  const index = useMemo(() => buildIndex(nodes), [nodes]);
+  const depthOf = index.depthOf;
+  const tones = useMemo(() => branchColors(nodes, index), [nodes, index]);
 
   const rfNodes: IdeaFlowNode[] = useMemo(
     () =>
@@ -106,9 +121,10 @@ export function MindMap() {
           category: n.category,
           isRoot: n.parentId === null,
           depth: depthOf.get(n.id) ?? 0,
+          tone: tones.get(n.id) ?? '#1b1a17',
         },
       })),
-    [nodes, selectedIds, depthOf],
+    [nodes, selectedIds, depthOf, tones],
   );
 
   const rfEdges: Edge[] = useMemo(() => {
@@ -118,21 +134,20 @@ export function MindMap() {
       const b = pos.get(e.target) ?? { x: 0, y: 0 };
       const handles = pickHandles(a, b);
       const cross = e.type === 'cross';
-      const cat = categoryDef(nodes.find((n) => n.id === e.target)?.category ?? 'other');
+      const tone = tones.get(e.target) ?? tones.get(e.source) ?? '#1b1a17';
       return {
         id: e.id,
         source: e.source,
         target: e.target,
         ...handles,
-        type: 'straight',
+        type: 'sketch',
         selected: selectedEdgeIds.includes(e.id),
         className: cross ? 'edge-cross' : 'edge-parent',
-        style: cross
-          ? { stroke: '#e2593f', strokeWidth: 2.5, strokeDasharray: '7 5' }
-          : { stroke: cat.ink, strokeWidth: 2, opacity: 0.5 },
+        zIndex: cross ? 1 : 0,
+        data: { kind: e.type, color: cross ? '#ef4b3a' : tone },
       };
     });
-  }, [edges, nodes, selectedEdgeIds]);
+  }, [edges, nodes, selectedEdgeIds, tones]);
 
   // 選択は React Flow から届く 'select' 変更を store に反映させる。
   // props の selected と onSelectionChange を併用すると両者が取り合って無限ループになる。
@@ -187,6 +202,7 @@ export function MindMap() {
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -202,12 +218,12 @@ export function MindMap() {
         fitView
         fitViewOptions={{ padding: 0.3, minZoom: 0.5, maxZoom: 1 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={26} size={1.6} color="#d8d1c0" />
+        <Background variant={BackgroundVariant.Cross} gap={40} size={5} color="#ded4bb" />
         <MiniMap
           pannable
           zoomable
           className="mini"
-          nodeColor={() => '#c9c1ad'}
+          nodeColor={(n) => (n.data?.tone as string) ?? '#1b1a17'}
           style={{ width: 150, height: 104 }}
         />
         <Controls showInteractive={false} />

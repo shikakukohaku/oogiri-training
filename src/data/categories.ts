@@ -1,14 +1,18 @@
 import type { Category, CategoryDef } from '../types';
 
+/**
+ * リソグラフ印刷のような、版で刷ったベタ色。
+ * color = 付箋の地色 / deep = 枝線やラベルに使う濃い同系色。
+ */
 export const CATEGORIES: CategoryDef[] = [
-  { id: 'other', label: '未分類', color: '#f3efe4', ink: '#5c5449' },
-  { id: 'thing', label: 'モノ', color: '#d9ebf7', ink: '#25587a' },
-  { id: 'action', label: '行動', color: '#dcefdc', ink: '#2f6b3a' },
-  { id: 'trait', label: '特徴', color: '#fbe6cf', ink: '#8a5320' },
-  { id: 'emotion', label: '感情', color: '#f9dcdc', ink: '#8f3a3a' },
-  { id: 'common', label: '常識', color: '#e6e1f5', ink: '#4d4183' },
-  { id: 'situation', label: '状況', color: '#d8efee', ink: '#22645f' },
-  { id: 'word', label: '言葉', color: '#f7e9b8', ink: '#7a6212' },
+  { id: 'other', label: '未分類', color: '#fffdf4', deep: '#8c8474' },
+  { id: 'thing', label: 'モノ', color: '#b9e0f7', deep: '#1c6b96' },
+  { id: 'action', label: '行動', color: '#c6e9ad', deep: '#3d7a2a' },
+  { id: 'trait', label: '特徴', color: '#ffd8a3', deep: '#a35c14' },
+  { id: 'emotion', label: '感情', color: '#ffb6c8', deep: '#b1315c' },
+  { id: 'common', label: '常識', color: '#d8d3f2', deep: '#4b429c' },
+  { id: 'situation', label: '状況', color: '#a4e5db', deep: '#12756a' },
+  { id: 'word', label: '言葉', color: '#ffe27a', deep: '#8a6b06' },
 ];
 
 export function categoryDef(id: Category): CategoryDef {

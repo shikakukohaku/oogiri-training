@@ -5,10 +5,10 @@ import { topicById } from '../data/topics';
 import { exportLogsCsv, exportLogsJson } from '../lib/logs';
 
 const BARS = [
-  { key: 'volume', label: '発想量', max: 20 },
-  { key: 'width', label: '広さ', max: 8 },
-  { key: 'depth', label: '深さ', max: 6 },
-  { key: 'cross', label: '横断', max: 5 },
+  { key: 'volume', label: '発想量', max: 20, tone: 'red' },
+  { key: 'width', label: '広さ', max: 8, tone: 'blue' },
+  { key: 'depth', label: '深さ', max: 6, tone: 'teal' },
+  { key: 'cross', label: '横断', max: 5, tone: 'pink' },
 ] as const;
 
 function Segments({ value, max }: { value: number; max: number }) {
@@ -46,12 +46,13 @@ export function ResultOverlay() {
   return (
     <div className="overlay">
       <div className="result">
+        <span className="result-ribbon">RESULT</span>
         <p className="result-topic">{topicById(topicId).text}</p>
         <h2 className="result-title">今回の発想</h2>
 
         <ul className="result-bars">
           {BARS.map((b) => (
-            <li key={b.key}>
+            <li key={b.key} className={`tone-${b.tone}`}>
               <span className="result-bar-label">{b.label}</span>
               <Segments value={stats[b.key]} max={b.max} />
               <span className="result-bar-value">{stats[b.key]}</span>
@@ -87,7 +88,7 @@ export function ResultOverlay() {
           <button type="button" className="btn btn-primary" onClick={restart}>
             もう一度
           </button>
-          <button type="button" className="btn btn-primary" onClick={goNextTopic}>
+          <button type="button" className="btn btn-teal" onClick={goNextTopic}>
             次のお題
           </button>
           <button type="button" className="btn" onClick={backToMap}>

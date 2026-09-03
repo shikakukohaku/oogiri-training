@@ -158,7 +158,7 @@ export const useSession = create<SessionState>()(
           text,
           parentId,
           category,
-          position: childPosition(s.nodes, parentId),
+          position: childPosition(s.nodes, parentId, text),
         };
         const edge: IdeaEdge = {
           id: uid('e'),

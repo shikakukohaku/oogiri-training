@@ -1,6 +1,7 @@
 import { useSession } from '../store/useSession';
 import { topicById, TOPICS } from '../data/topics';
 import { exportLogsCsv, exportLogsJson } from '../lib/logs';
+import { emit, FIT_VIEW } from '../lib/bus';
 
 export function TopBar() {
   const topicId = useSession((s) => s.topicId);
@@ -18,6 +19,11 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-main">
+        <span className="topbar-mark" title="大喜利発想トレーニング">
+          発想
+          <br />
+          筋トレ
+        </span>
         <span className="topbar-tag">お題</span>
         <h1 className="topbar-topic">{topic.text}</h1>
       </div>
@@ -50,7 +56,15 @@ export function TopBar() {
         >
           やり直す
         </button>
-        <button type="button" className="btn" onClick={autoLayout} title="放射状に並べ直す">
+        <button
+          type="button"
+          className="btn"
+          title="放射状に並べ直す"
+          onClick={() => {
+            autoLayout();
+            emit(FIT_VIEW);
+          }}
+        >
           整列
         </button>
         <button

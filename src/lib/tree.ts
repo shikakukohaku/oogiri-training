@@ -10,6 +10,18 @@ export interface TreeIndex {
   rootId: string | null;
 }
 
+/** 枝ごとの色。Root 直下の並び順で割り当てる */
+export const BRANCH_TONES = [
+  '#ef4b3a',
+  '#3b62d9',
+  '#17a398',
+  '#e0559b',
+  '#e08a1e',
+  '#6b58c9',
+  '#2f8f45',
+  '#c23b6b',
+];
+
 export function buildIndex(nodes: IdeaNode[]): TreeIndex {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const childrenOf = new Map<string, IdeaNode[]>();
@@ -64,6 +76,20 @@ export function isCrossBranch(index: TreeIndex, edge: IdeaEdge): boolean {
   if (a === undefined || b === undefined) return false;
   if (a === null || b === null) return false; // Root への接続は横断としない
   return a !== b;
+}
+
+/** ノード id → 枝の色 */
+export function branchColors(nodes: IdeaNode[], index: TreeIndex): Map<string, string> {
+  const rootChildren = index.rootId ? (index.childrenOf.get(index.rootId) ?? []) : [];
+  const byBranch = new Map(
+    rootChildren.map((c, i) => [c.id, BRANCH_TONES[i % BRANCH_TONES.length]] as const),
+  );
+  const out = new Map<string, string>();
+  for (const n of nodes) {
+    const branch = index.branchOf.get(n.id);
+    out.set(n.id, branch ? (byBranch.get(branch) ?? BRANCH_TONES[0]) : '#1b1a17');
+  }
+  return out;
 }
 
 export function computeStats(
