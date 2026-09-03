@@ -111,7 +111,8 @@ LocalStorage のキー：
 ## GitHub Pages で公開する
 
 1. リポジトリの **Settings → Pages → Build and deployment → Source** を `GitHub Actions` にする
-   （これを先にやらないと、デプロイのジョブが「Pages が有効になっていない」で落ちる）
+   （これを先にやらないとジョブが落ちる。ワークフロー側からの有効化は `GITHUB_TOKEN` の
+   権限では通らないので、この一手だけは手で行う。public リポジトリなら無料プランでよい）
 2. あとは push するたびに `.github/workflows/deploy.yml` がビルドして公開する
 3. 公開先は `https://shikakukohaku.github.io/oogiri-training/`
 

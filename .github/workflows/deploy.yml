@@ -31,10 +31,9 @@ jobs:
 
       - run: npm ci
 
-      # Settings → Pages を手で開かなくても、ここで Pages を有効化する
+      # Pages の有効化はワークフローからはできない（GITHUB_TOKEN に権限がない）。
+      # Settings → Pages → Source を GitHub Actions にしておくこと。
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - run: npm run build
 
