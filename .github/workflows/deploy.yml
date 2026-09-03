@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      # マージするまでは作業ブランチからも公開する。マージ後はこの行を消してよい。
-      - claude/oogiri-ideation-training-mvp-cy4uwr
   workflow_dispatch:
 
 permissions:
