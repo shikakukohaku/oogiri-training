@@ -389,6 +389,15 @@ if (
 
 程度。**アクセント記号は削除しない。**
 
+実装メモ: この正規化はアプリ側（`core/normalize.mjs`）と DB 側の生成列の両方に置いてある。
+片方だけ直すとズレるので、DB の生成列を正とする。
+
+```sql
+normalized_lemma text generated always as (
+  lower(regexp_replace(btrim(normalize(lemma, nfc)), '\s+', ' ', 'g'))
+) stored
+```
+
 ---
 
 ## 12. 「遭遇」を保存する
@@ -425,6 +434,9 @@ atreverse   遭遇回数 4
 
 ## 14. データモデル
 
+> 実際の DDL は [`vocabulary-inbox/db/schema.sql`](../vocabulary-inbox/db/schema.sql)。
+> 以下との差分は各テーブルの「実装メモ」に書く。
+
 ### users
 
 ```
@@ -452,16 +464,21 @@ created_at
 ```
 id
 user_id
+target_language
 raw_text
 source_type
 source_url    nullable
 title         nullable
 status
+error         nullable
 created_at
 processed_at
 ```
 
 `status`: `pending` / `processing` / `completed` / `failed`
+
+実装メモ: `target_language` は後から言語を増やしたときに、どの言語として解析したかを
+遡れるようにするため。`error` は `failed` の理由を画面に出すため。
 
 ### vocabulary_items
 
@@ -506,11 +523,17 @@ vocabulary_item_id
 card_type
 due_at
 fsrs_state    jsonb
+suspended_at  nullable
 created_at
 updated_at
 ```
 
 MVPでは `card_type = recognition` だけでよい。
+
+実装メモ: `suspended_at` は Known / Ignore にした語を復習から外すための印（13章）。
+`due_at` を遠い未来に飛ばす方法もあるが、そこは FSRS が持つ値なので触らない。
+`suspended_at` なら learning に戻したときに元のスケジュールがそのまま復活する。
+「今日の復習」は `cards (user_id, due_at) where suspended_at is null` の部分索引だけで引ける。
 
 ### review_logs
 

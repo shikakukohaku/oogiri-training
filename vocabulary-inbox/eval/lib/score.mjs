@@ -6,20 +6,11 @@
  * 設計書 31章の評価ループのうち、機械にできる部分だけをここで担当する。
  */
 
-import { containsNormalized, normalizeLemma } from './normalize.mjs';
-import { validateExtractedItem } from './schema.mjs';
+import { normalizeLemma } from '../../core/normalize.mjs';
+import { findItemProblems } from '../../core/schema.mjs';
+import { DEFAULT_REGISTER_RULE, shouldRegister } from '../../core/ingest.mjs';
 
-/** 設計書 10章の自動登録ロジック（MVP版）。 */
-export const DEFAULT_REGISTER_RULE = { minConfidence: 0.7, minUsefulness: 0.6 };
-
-export function shouldRegister(item, rule = DEFAULT_REGISTER_RULE) {
-  return (
-    typeof item?.confidence === 'number' &&
-    typeof item?.usefulnessScore === 'number' &&
-    item.confidence >= rule.minConfidence &&
-    item.usefulnessScore >= rule.minUsefulness
-  );
-}
+export { DEFAULT_REGISTER_RULE, shouldRegister };
 
 /**
  * shouldPick との突き合わせは緩く見る。
@@ -51,13 +42,7 @@ export function scoreCase({ testCase, items, rule = DEFAULT_REGISTER_RULE }) {
 
   const seenLemmas = new Set();
   const scored = items.map((item) => {
-    const problems = validateExtractedItem(item);
-    if (!containsNormalized(testCase.text, item?.sourceSentence)) {
-      problems.push('sourceSentence が原文に無い（捏造の疑い）');
-    }
-    if (!containsNormalized(testCase.text, item?.surfaceForm)) {
-      problems.push('surfaceForm が原文に無い');
-    }
+    const problems = findItemProblems(item, testCase.text);
     const key = normalizeLemma(item?.lemma);
     if (seenLemmas.has(key)) problems.push('同じ lemma が重複している');
     seenLemmas.add(key);

@@ -14,7 +14,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createBaselineExtractor, createDeepSeekExtractor } from './lib/extractor.mjs';
+import { createBaselineExtractor, createDeepSeekExtractor } from '../core/extractor.mjs';
 import { DEFAULT_REGISTER_RULE, scoreCase, summarize } from './lib/score.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));

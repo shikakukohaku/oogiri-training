@@ -6,6 +6,8 @@
  * validateExtractedItem() 側は共通で使える。
  */
 
+import { containsNormalized } from './normalize.mjs';
+
 export const VOCABULARY_TYPES = ['word', 'phrase', 'idiom'];
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -68,6 +70,24 @@ export function validateExtractedItem(item) {
     const value = item?.[key];
     if (typeof value !== 'number' || Number.isNaN(value) || value < 0 || value > 1) {
       problems.push(`${key} が 0〜1 の数値でない: ${value}`);
+    }
+  }
+  return problems;
+}
+
+/**
+ * スキーマ検証に加えて、原文との突き合わせまで行う。
+ * 設計書9章の「元文章に存在しない例文を作らない / sourceSentence は原文をそのまま使う」は
+ * 事後に機械で確かめられる数少ないルールなので、抽出と評価の両方でここを通す。
+ */
+export function findItemProblems(item, sourceText) {
+  const problems = validateExtractedItem(item);
+  if (sourceText != null) {
+    if (!containsNormalized(sourceText, item?.sourceSentence)) {
+      problems.push('sourceSentence が原文に無い（捏造の疑い）');
+    }
+    if (!containsNormalized(sourceText, item?.surfaceForm)) {
+      problems.push('surfaceForm が原文に無い');
     }
   }
   return problems;
