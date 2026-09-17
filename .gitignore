@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Vocabulary Inbox の評価結果
+vocabulary-inbox/eval/results/*
+!vocabulary-inbox/eval/results/.gitkeep
